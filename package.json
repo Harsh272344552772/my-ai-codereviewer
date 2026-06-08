@@ -9,7 +9,9 @@
   },
   "dependencies": {
     "openai": "^4.28.0",
-    "@octokit/rest": "^20.0.2",
+    "@octokit/rest": "^20.0.2"
+  },
+  "devDependencies": {
     "vercel": "^32.0.0"
   }
 }
