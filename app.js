@@ -28,11 +28,14 @@ document.addEventListener('DOMContentLoaded', () => {
   const fixedLineNumbers = document.getElementById('fixed-line-numbers');
   const fixedCodeDisplay = document.getElementById('fixed-code-display');
   const btnCopyFixed = document.getElementById('btn-copy-fixed');
+  const zipSelectorContainer = document.getElementById('zip-selector-container');
+  const zipFileSelect = document.getElementById('zip-file-select');
 
   // --- State Variables ---
   let activeInputMode = 'upload'; // 'upload' | 'paste'
   let selectedFileContent = '';
   let selectedName = '';
+  let zipFileInstance = null;
   let analysisResult = null;
 
   // --- Input Mode Tab Toggles ---
@@ -41,6 +44,7 @@ document.addEventListener('DOMContentLoaded', () => {
     tabUpload.classList.add('active');
     tabPaste.classList.remove('active');
     uploadZone.classList.remove('hidden');
+    if (zipFileInstance) zipSelectorContainer.classList.remove('hidden');
     pasteZone.classList.add('hidden');
     checkInputState();
   });
@@ -51,6 +55,7 @@ document.addEventListener('DOMContentLoaded', () => {
     tabUpload.classList.remove('active');
     pasteZone.classList.remove('hidden');
     uploadZone.classList.add('hidden');
+    zipSelectorContainer.classList.add('hidden');
     checkInputState();
   });
 
@@ -88,35 +93,110 @@ document.addEventListener('DOMContentLoaded', () => {
     resetFileSelection();
   });
 
+  zipFileSelect.addEventListener('change', async (e) => {
+    await loadZipFileContent(e.target.value);
+  });
+
   pasteTextarea.addEventListener('input', checkInputState);
   pasteFilename.addEventListener('input', checkInputState);
 
   // --- Core File Reader Logic ---
-  function handleFileSelection(file) {
-    const reader = new FileReader();
-    reader.onload = (e) => {
-      selectedFileContent = e.target.result;
-      selectedName = file.name;
-      
-      // Update UI file representation
-      selectedFileName.textContent = file.name;
-      fileInfo.classList.remove('hidden');
-      document.querySelector('.upload-icon').classList.add('hidden');
-      document.querySelector('.upload-title').classList.add('hidden');
-      document.querySelector('.upload-subtitle').classList.add('hidden');
-      document.querySelector('.or-divider').classList.add('hidden');
-      document.querySelector('.file-btn').classList.add('hidden');
+  async function handleFileSelection(file) {
+    if (file.name.toLowerCase().endsWith('.zip')) {
+      try {
+        const zip = await JSZip.loadAsync(file);
+        zipFileInstance = zip;
+        
+        // Filter out folders and common binary extensions
+        const ignoredExtensions = ['.png', '.jpg', '.jpeg', '.gif', '.svg', '.ico', '.pdf', '.zip', '.gz', '.mp4', '.mov', '.mp3', '.class', '.exe', '.dll', '.jar', '.woff', '.woff2', '.ttf', '.eot'];
+        const ignoredNames = ['package-lock.json', 'yarn.lock', 'pnpm-lock.yaml', 'go.sum', 'cargo.lock', 'composer.lock'];
+        
+        const files = Object.keys(zip.files).filter(name => {
+          const isDir = zip.files[name].dir;
+          const nameLower = name.toLowerCase();
+          const hasIgnoredExt = ignoredExtensions.some(ext => nameLower.endsWith(ext));
+          const hasIgnoredName = ignoredNames.some(ignoredName => nameLower.endsWith(ignoredName));
+          return !isDir && !hasIgnoredExt && !hasIgnoredName;
+        });
 
+        if (files.length === 0) {
+          alert('No reviewable text-based source files found inside the ZIP package.');
+          resetFileSelection();
+          return;
+        }
+
+        // Populate select list
+        zipFileSelect.innerHTML = '';
+        files.forEach(filename => {
+          const opt = document.createElement('option');
+          opt.value = filename;
+          opt.textContent = filename;
+          zipFileSelect.appendChild(opt);
+        });
+
+        // Show selector container
+        zipSelectorContainer.classList.remove('hidden');
+
+        // Update UI file representation
+        selectedFileName.textContent = `${file.name} (ZIP Package)`;
+        fileInfo.classList.remove('hidden');
+        document.querySelector('.upload-icon').classList.add('hidden');
+        document.querySelector('.upload-title').classList.add('hidden');
+        document.querySelector('.upload-subtitle').classList.add('hidden');
+        document.querySelector('.or-divider').classList.add('hidden');
+        document.querySelector('.file-btn').classList.add('hidden');
+
+        // Automatically load first file content
+        await loadZipFileContent(files[0]);
+
+      } catch (err) {
+        alert(`Failed to parse ZIP package: ${err.message}`);
+        resetFileSelection();
+      }
+    } else {
+      // Standard file upload
+      zipSelectorContainer.classList.add('hidden');
+      zipFileInstance = null;
+
+      const reader = new FileReader();
+      reader.onload = (e) => {
+        selectedFileContent = e.target.result;
+        selectedName = file.name;
+        
+        // Update UI file representation
+        selectedFileName.textContent = file.name;
+        fileInfo.classList.remove('hidden');
+        document.querySelector('.upload-icon').classList.add('hidden');
+        document.querySelector('.upload-title').classList.add('hidden');
+        document.querySelector('.upload-subtitle').classList.add('hidden');
+        document.querySelector('.or-divider').classList.add('hidden');
+        document.querySelector('.file-btn').classList.add('hidden');
+
+        checkInputState();
+      };
+      reader.readAsText(file);
+    }
+  }
+
+  async function loadZipFileContent(filename) {
+    if (!zipFileInstance) return;
+    try {
+      const content = await zipFileInstance.files[filename].async('string');
+      selectedFileContent = content;
+      selectedName = filename;
       checkInputState();
-    };
-    reader.readAsText(file);
+    } catch (err) {
+      alert(`Failed to load ZIP file entry: ${err.message}`);
+    }
   }
 
   function resetFileSelection() {
     selectedFileContent = '';
     selectedName = '';
+    zipFileInstance = null;
     fileInput.value = '';
     fileInfo.classList.add('hidden');
+    zipSelectorContainer.classList.add('hidden');
     document.querySelector('.upload-icon').classList.remove('hidden');
     document.querySelector('.upload-title').classList.remove('hidden');
     document.querySelector('.upload-subtitle').classList.remove('hidden');
