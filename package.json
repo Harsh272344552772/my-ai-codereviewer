@@ -1,0 +1,15 @@
+{
+  "name": "qwen-code-reviewer",
+  "version": "1.0.0",
+  "type": "module",
+  "scripts": {
+    "dev": "node local-server.js",
+    "start": "node local-server.js",
+    "test": "node test-local.js"
+  },
+  "dependencies": {
+    "openai": "^4.28.0",
+    "@octokit/rest": "^20.0.2",
+    "vercel": "^32.0.0"
+  }
+}
