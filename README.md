@@ -37,6 +37,7 @@ The backend is hosted on Vercel (Serverless functions), but it makes API calls t
    - Create a new project in Vercel.
    - Set up the environment variables:
      - `QWEN_API_KEY`: Your Alibaba Cloud DashScope API Key (starts with `sk-...`).
+     - `QWEN_BASE_URL`: (Optional) Your custom MaaS endpoint base URL if using a dedicated instance.
      - `GITHUB_TOKEN`: A Personal Access Token (Classic) with the `repo` scope.
 2. **Set up Webhook**:
    - Go to your target GitHub repository's **Settings > Webhooks > Add webhook**.
