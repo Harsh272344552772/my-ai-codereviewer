@@ -3,7 +3,7 @@ import { OpenAI } from 'openai';
 // Setup Qwen (Alibaba Cloud) via OpenAI-compatible SDK
 const qwen = new OpenAI({
   apiKey: process.env.QWEN_API_KEY || 'dummy-qwen-key-for-local-boot',
-  baseURL: 'https://dashscope-intl.aliyuncs.com/compatible-mode/v1',
+  baseURL: process.env.QWEN_BASE_URL || 'https://dashscope-intl.aliyuncs.com/compatible-mode/v1',
   fetch: (...args) => globalThis.fetch(...args)
 });
 
