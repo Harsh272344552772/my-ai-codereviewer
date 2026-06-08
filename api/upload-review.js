@@ -20,6 +20,14 @@ export default async function handler(req, res) {
 
   console.log(`Analyzing file "${filename || 'unnamed'}" on-demand...`);
 
+  // Enforce DashScope length limit of 30,720 characters on overall prompt
+  const MAX_CODE_LENGTH = 20000;
+  let codeToReview = code;
+  if (code.length > MAX_CODE_LENGTH) {
+    codeToReview = code.substring(0, MAX_CODE_LENGTH) + '\n\n// [... Code truncated due to size limits ...]';
+    console.log(`Truncated file "${filename}" from ${code.length} to ${codeToReview.length} characters.`);
+  }
+
   try {
     const prompt = `
 You are an expert Senior Software Engineer and Security Auditor.
@@ -43,7 +51,7 @@ Your output MUST be strictly valid JSON with this exact schema (no markdown wrap
 
 Code to review:
 \`\`\`
-${code}
+${codeToReview}
 \`\`\`
 `;
 

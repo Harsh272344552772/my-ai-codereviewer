@@ -72,15 +72,22 @@ export default async function handler(req, res) {
     }
 
     // Format code context for AI review
-    // We also limit each patch length to 20,000 characters to prevent excessive tokens
-    const MAX_PATCH_LENGTH = 20000;
-    const codeContext = reviewableFiles.map(file => {
+    // We also limit each patch length to 15,000 characters to prevent excessive tokens
+    const MAX_PATCH_LENGTH = 15000;
+    let codeContext = reviewableFiles.map(file => {
       let patch = file.patch;
       if (patch.length > MAX_PATCH_LENGTH) {
         patch = patch.substring(0, MAX_PATCH_LENGTH) + '\n\n[... Patch truncated due to size limit ...]';
       }
       return `File: ${file.filename}\n${patch}`;
     }).join('\n---\n');
+
+    // Enforce overall DashScope prompt length limit of 30,720 characters (use 22,000 max for codeContext)
+    const MAX_CONTEXT_LENGTH = 22000;
+    if (codeContext.length > MAX_CONTEXT_LENGTH) {
+      codeContext = codeContext.substring(0, MAX_CONTEXT_LENGTH) + '\n\n// [... Remainder of code changes truncated to fit model context limits ...]';
+      console.log(`Truncated overall webhook review codeContext to ${codeContext.length} characters.`);
+    }
 
     // 5. Send to Qwen for Analysis
     const prompt = `
