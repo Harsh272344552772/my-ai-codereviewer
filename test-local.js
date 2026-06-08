@@ -118,14 +118,14 @@ const mockReq = {
   body: {
     action: 'opened',
     pull_request: {
-      number: 42,
-      title: 'Fix division function'
+      number: 1,
+      title: 'Test AI review capabilities'
     },
     repository: {
       name: 'my-ai-codereviewer',
-      full_name: 'test-user/my-ai-codereviewer',
+      full_name: 'Harsh272344552772/my-ai-codereviewer',
       owner: {
-        login: 'test-user'
+        login: 'Harsh272344552772'
       }
     }
   }
