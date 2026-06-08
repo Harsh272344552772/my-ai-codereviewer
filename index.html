@@ -1,0 +1,178 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>CodeReview Autopilot - AI Inspector</title>
+  <!-- Google Fonts & Material Icons -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600;800&family=JetBrains+Mono:wght@400;500;700&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/icon?family=Material+Icons+Round" rel="stylesheet">
+  <!-- Link index.css -->
+  <link rel="stylesheet" href="index.css">
+</head>
+<body>
+  <div class="background-decorations">
+    <div class="blob blob-1"></div>
+    <div class="blob blob-2"></div>
+  </div>
+
+  <div class="app-container">
+    <header class="app-header">
+      <div class="logo-area">
+        <span class="material-icons-round logo-icon">smart_toy</span>
+        <h1>CodeReview <span>Autopilot</span></h1>
+      </div>
+      <p class="tagline">Upload a file or paste code to receive instant, line-by-line AI code quality reviews.</p>
+    </header>
+
+    <main class="dashboard-grid">
+      <!-- Input Panel -->
+      <section class="glass-card input-panel">
+        <div class="card-header">
+          <span class="material-icons-round header-icon">code</span>
+          <h2>Source Code Input</h2>
+        </div>
+        
+        <div class="input-tabs">
+          <button class="tab-btn active" id="tab-upload">
+            <span class="material-icons-round">upload_file</span> File Upload
+          </button>
+          <button class="tab-btn" id="tab-paste">
+            <span class="material-icons-round">description</span> Paste Code
+          </button>
+        </div>
+
+        <div class="tab-content">
+          <!-- Upload Area -->
+          <div class="upload-zone" id="upload-zone">
+            <span class="material-icons-round upload-icon">cloud_upload</span>
+            <p class="upload-title">Drag & Drop file here</p>
+            <p class="upload-subtitle">Supports .js, .py, .ts, .java, .cpp, .html, .css, etc.</p>
+            <span class="or-divider">or</span>
+            <label for="file-input" class="file-btn">Browse Files</label>
+            <input type="file" id="file-input" class="hidden-input">
+            <div class="selected-file-info hidden" id="file-info">
+              <span class="material-icons-round">insert_drive_file</span>
+              <span class="file-name" id="selected-file-name">math.js</span>
+              <button class="remove-file-btn" id="remove-file-btn">
+                <span class="material-icons-round">close</span>
+              </button>
+            </div>
+          </div>
+
+          <!-- Paste Area -->
+          <div class="paste-zone hidden" id="paste-zone">
+            <div class="paste-header">
+              <input type="text" id="paste-filename" placeholder="filename.js (optional)" class="input-text">
+            </div>
+            <textarea id="paste-textarea" placeholder="Paste your code snippet here..." spellcheck="false"></textarea>
+          </div>
+        </div>
+
+        <button class="action-btn" id="btn-analyze" disabled>
+          <span class="material-icons-round">troubleshoot</span> Analyze Code
+        </button>
+      </section>
+
+      <!-- Output / Results Panel -->
+      <section class="glass-card results-panel">
+        <!-- Empty State -->
+        <div class="empty-state" id="empty-state">
+          <span class="material-icons-round empty-icon">analytics</span>
+          <h3>Awaiting Analysis</h3>
+          <p>Provide a source file or paste code in the left panel, then click "Analyze Code" to let Qwen inspect it.</p>
+        </div>
+
+        <!-- Loading State -->
+        <div class="loading-state hidden" id="loading-state">
+          <div class="spinner-container">
+            <div class="spinner"></div>
+            <span class="material-icons-round spinner-robot">smart_toy</span>
+          </div>
+          <h3 id="loading-step">Uploading code snippet...</h3>
+          <p>Running code linting, security scanning, and logic analysis via Qwen LLM.</p>
+        </div>
+
+        <!-- Review Results Content -->
+        <div class="results-content hidden" id="results-content">
+          <!-- Overview Cards -->
+          <div class="metrics-grid">
+            <div class="metric-card score-card">
+              <div class="circular-progress">
+                <svg viewBox="0 0 36 36" class="circular-chart">
+                  <path class="circle-bg" d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831" />
+                  <path class="circle" id="score-circle" stroke-dasharray="0, 100" d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831" />
+                  <text x="18" y="20.35" class="percentage" id="score-text">0</text>
+                </svg>
+              </div>
+              <div class="metric-info">
+                <h3>Quality Score</h3>
+                <p id="score-label">Calculating</p>
+              </div>
+            </div>
+
+            <div class="metric-card summary-card">
+              <h3>Executive Summary</h3>
+              <p id="review-summary">Analyzing findings...</p>
+            </div>
+          </div>
+
+          <!-- Tabs Viewers -->
+          <div class="viewers-card">
+            <div class="viewer-tabs">
+              <button class="viewer-tab-btn active" data-tab="issues-list">
+                <span class="material-icons-round">bug_report</span> Issues (<span id="issues-count">0</span>)
+              </button>
+              <button class="viewer-tab-btn" data-tab="code-view">
+                <span class="material-icons-round">article</span> Source Code
+              </button>
+              <button class="viewer-tab-btn" data-tab="fixed-view">
+                <span class="material-icons-round">auto_fix_high</span> Corrected Code
+              </button>
+            </div>
+
+            <div class="viewer-content">
+              <!-- Issues List Tab -->
+              <div class="viewer-tab-panel active" id="panel-issues-list">
+                <div class="issues-list" id="issues-list-container">
+                  <!-- Dynamic Issues -->
+                </div>
+              </div>
+
+              <!-- Source Code Tab -->
+              <div class="viewer-tab-panel" id="panel-code-view">
+                <div class="code-container">
+                  <pre class="line-numbers" id="source-line-numbers"></pre>
+                  <pre><code id="source-code-display" class="jetbrains-mono"></code></pre>
+                </div>
+              </div>
+
+              <!-- Corrected Code Tab -->
+              <div class="viewer-tab-panel" id="panel-fixed-view">
+                <div class="panel-actions">
+                  <button class="sub-action-btn" id="btn-copy-fixed">
+                    <span class="material-icons-round">content_copy</span> Copy Code
+                  </button>
+                </div>
+                <div class="code-container fixed-code-container">
+                  <pre class="line-numbers" id="fixed-line-numbers"></pre>
+                  <pre><code id="fixed-code-display" class="jetbrains-mono"></code></pre>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+    </main>
+  </div>
+
+  <footer class="app-footer">
+    <p>Powered by <span>Alibaba Cloud Qwen-Max</span> & Vercel Serverless Functions.</p>
+  </footer>
+
+  <!-- Link app.js -->
+  <script src="app.js"></script>
+</body>
+</html>
